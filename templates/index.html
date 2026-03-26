@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+
+:root{
+    --green:#1f5f3f;
+    --green-soft:#eaf7ef;
+    --border:#d1d5db;
+    --text:#111827;
+    --text-light:#374151;
+}
+
+/* Page */
+
+body{
+    margin:0;
+    font-family: system-ui,-apple-system,sans-serif;
+    background:#f1f5f3;
+    color:var(--text);
+    font-size:16px;
+}
+
+/* Header */
+
+.top-nav{
+    background:var(--green);
+    color:white;
+    padding:16px 40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.logo{
+    font-weight:700;
+    font-size:18px;
+}
+
+/* Hero */
+
+.hero{
+    text-align:center;
+    margin:40px auto 30px auto;
+    max-width:800px;
+}
+
+.hero h1{
+    font-size:38px;
+    margin-bottom:10px;
+    color:#0f172a;
+    font-weight:700;
+}
+
+.hero p{
+    color:var(--text-light);
+    font-size:16px;
+}
+
+/* Container */
+
+.container{
+    max-width:1100px;
+    margin:auto;
+}
+
+/* Card */
+
+.main-card{
+    background:white;
+    border-radius:16px;
+    padding:28px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+}
+
+/* Section title */
+
+.section-title{
+    font-size:18px;
+    font-weight:600;
+    margin-bottom:18px;
+}
+
+/* Layout */
+
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+}
+
+/* Upload */
+
+.file-upload-box{
+    border:2px dashed #4fa86a;
+    border-radius:12px;
+    padding:30px;
+    background:var(--green-soft);
+    text-align:center;
+    cursor:pointer;
+}
+
+.file-upload-box:hover{
+    background:#def0e6;
+}
+
+.preview-image{
+    width:100%;
+    border-radius:10px;
+}
+
+/* Inputs */
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+    margin-bottom:14px;
+}
+
+select,input[type="text"]{
+    padding:10px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    font-size:14px;
+    background:#ffffff;
+    color:#111827;
+    font-weight:500;
+}
+
+/* Force readable dropdown appearance on Safari */
+select{
+    appearance:none !important;
+    -webkit-appearance:none !important;
+    -moz-appearance:none !important;
+    background-color:#ffffff !important;
+    color:#111827 !important;
+    border:1px solid #d1d5db !important;
+    border-radius:8px;
+    padding:10px;
+    box-shadow:none !important;
+    outline:none !important;
+}
+
+/* Fix Safari dark tint when interacting */
+select:focus,
+select:active{
+    background-color:#ffffff !important;
+    color:#111827 !important;
+    outline:none !important;
+    box-shadow:0 0 0 2px rgba(31,95,63,0.2) !important;
+}
+
+/* Dropdown options styling */
+select option{
+    background:#ffffff !important;
+    color:#111827 !important;
+}
+
+/* macOS Safari internal dropdown fix */
+select::-webkit-listbox{
+    background:#ffffff !important;
+    color:#111827 !important;
+}
+
+/* Improve label contrast even more */
+/* Strong readable form labels */
+.form-group label{
+    font-weight:800 !important;
+    color:#000000 !important;
+    font-size:15px !important;
+    letter-spacing:0.6px;
+    text-transform:uppercase;
+    opacity:1 !important;
+}
+
+.form-group{
+    opacity:1 !important;
+}
+
+/* Slider */
+
+.slider-container{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.slider-value{
+    background:#e6f4ea;
+    color:var(--green);
+    padding:6px 10px;
+    border-radius:6px;
+    font-weight:600;
+}
+
+/* Button */
+
+.analyze-btn{
+    margin-top:16px;
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:8px;
+    background:var(--green);
+    color:white;
+    font-size:16px;
+    font-weight:600;
+    cursor:pointer;
+}
+
+.analyze-btn:hover{
+    background:#245c40;
+}
+
+/* Results */
+
+.results-card{
+    margin-top:30px;
+    background:white;
+    padding:28px;
+    border-radius:16px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+}
+
+.info-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:16px;
+}
+
+.info-card{
+    background:#fafafa;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:14px;
+}
+
+
+.alt-item{
+    display:flex;
+    justify-content:space-between;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px;
+    margin-top:8px;
+    background:white;
+}
+
+/* ---------- RESULT UI IMPROVEMENTS ---------- */
+
+.results-section{
+    margin-top:30px;
+}
+
+.prediction-header{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+    margin-bottom:25px;
+}
+
+.prediction-title{
+    font-size:24px;
+    font-weight:700;
+    color:#0f172a;
+}
+
+.health-status{
+    display:inline-block;
+    padding:6px 12px;
+    border-radius:20px;
+    font-size:13px;
+    margin-top:8px;
+}
+
+.health-status.healthy{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.health-status.high-risk{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.health-status.moderate-risk{
+    background:#fef3c7;
+    color:#92400e;
+}
+
+/* Confidence Bar */
+
+.confidence-wrapper{
+    margin-top:12px;
+}
+
+.confidence-label{
+    display:flex;
+    justify-content:space-between;
+    font-size:14px;
+    margin-bottom:6px;
+}
+
+.confidence-bar-bg{
+    width:100%;
+    height:8px;
+    background:#e5e7eb;
+    border-radius:6px;
+}
+
+.confidence-bar-fill{
+    height:8px;
+    background:linear-gradient(90deg,#22c55e,#16a34a);
+    border-radius:6px;
+}
+
+/* Result cards */
+
+.info-card{
+    background:white;
+    border-radius:12px;
+    padding:18px;
+    border:1px solid #e5e7eb;
+    box-shadow:0 6px 16px rgba(0,0,0,0.05);
+}
+
+.info-card-title{
+    font-weight:700;
+    font-size:16px;
+    margin-bottom:10px;
+    color:#0f172a;
+}
+
+.info-card-content{
+    font-size:15px;
+    line-height:1.7;
+    color:#1f2937;
+}
+
+/* Alternative predictions */
+
+.alt-predictions{
+    margin-top:25px;
+}
+
+.alt-predictions-title{
+    font-weight:700;
+    margin-bottom:10px;
+}
+
+.alt-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.alt-name{
+    font-weight:600;
+}
+
+.alt-prob{
+    font-weight:700;
+    color:#16a34a;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="top-nav">
+        <div class="logo">🌿 SmartFarm AI</div>
+        <div class="nav-links">
+            <!-- <span>Disease Detection</span>
+            <span>Crop Advisor</span>
+            <span>AI Assistant</span> -->
+        </div>
+    </div>
+
+    <div class="hero">
+        <h1>{{ t.title }}</h1>
+        <p>AI-powered plant disease detection & crop intelligence</p>
+    </div>
+
+    <div class="main-card">
+        <div class="section-title">📷 {{ t.upload }}</div>
+        <form method="POST" enctype="multipart/form-data" id="mainForm">
+
+            <div class="form-grid">
+                <!-- File Upload -->
+                <div class="form-group full-width">
+                    <label>{{ t.upload }}</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" name="image" id="fileInput" accept="image/*" required class="file-upload-input">
+                        <div class="file-upload-box" id="uploadBox">
+                            <div class="file-upload-icon">📷</div>
+                            <div class="file-upload-text">Click to upload or drag & drop</div>
+                            <div class="file-upload-hint">Supports JPG, PNG, WEBP</div>
+                            <div class="preview-container" id="previewContainer">
+                                <img id="preview" class="preview-image">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Crop Selection -->
+                <div class="form-group">
+                    <label>{{ t.crop }}</label>
+                    <div class="select-wrapper">
+                        <select name="crop" required>
+                            <option value="Tomato">{{ t.crop_tomato }}</option>
+                            <option value="Potato">{{ t.crop_potato }}</option>
+                            <option value="Pepper">{{ t.crop_pepper }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Soil Type -->
+                <div class="form-group">
+                    <label>{{ t.soil }}</label>
+                    <div class="select-wrapper">
+                        <select name="soil" required>
+                            <option value="Clay">{{ t.soil_clay }}</option>
+                            <option value="Loam">{{ t.soil_loam }}</option>
+                            <option value="Sandy">{{ t.soil_sandy }}</option>
+                            <option value="Silt">{{ t.soil_silt }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Soil Moisture -->
+                <div class="form-group full-width">
+                    <label>{{ t.moisture }}</label>
+                    <div class="slider-container">
+                        <input type="range" min="0" max="100" value="40" name="moisture" id="moistureSlider">
+                        <span class="slider-value" id="moistureValue">40%</span>
+                    </div>
+                </div>
+
+                <!-- Weather -->
+                <div class="form-group full-width">
+                    <label>{{ t.weather }}</label>
+                    <div class="select-wrapper">
+                        <select name="weather" required>
+                            <option value="Dry">{{ t.weather_dry }}</option>
+                            <option value="Humid">{{ t.weather_humid }}</option>
+                            <option value="Rainy">{{ t.weather_rainy }}</option>
+                            <option value="Hot">{{ t.weather_hot }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Language Selection -->
+                <div class="form-group full-width">
+                    <label>Language</label>
+                    <div class="select-wrapper">
+                        <select name="language" id="languageSelect">
+                            <option value="English">English</option>
+                            <option value="Hindi">Hindi</option>
+                            <option value="Telugu">Telugu</option>
+                            <option value="Tamil">Tamil</option>
+                            <option value="Kannada">Kannada</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group full-width">
+                <label>{{ t.question }}</label>
+                <input type="text" name="question" value="{{ request.form.get('question','') }}" placeholder="Example: Why did this disease occur?" style="width:100%;padding:10px;border-radius:6px;border:1px solid #ccc;">
+                <button type="button" id="voiceBtn" style="margin-top:10px;padding:8px 12px;border:none;border-radius:6px;background:#1f5f3f;color:white;cursor:pointer;">
+                    🎤 Speak
+                </button>
+            </div>
+
+            <button type="submit" class="analyze-btn">
+                {{ t.button }}
+            </button>
+
+        </form>
+    </div>
+
+    {% if result %}
+    <div class="results-section">
+        <div class="results-card" style="margin-top:10px;">
+
+            <div class="prediction-header">
+                <div class="prediction-title">{{ result }}</div>
+                {% if confidence %}
+                <div class="health-indicator">
+                    {% if 'healthy' in result.lower() %}
+                        <span class="health-status healthy">🟢 Healthy Plant</span>
+                    {% elif confidence > 85 %}
+                        <span class="health-status high-risk">🔴 High Disease Risk</span>
+                    {% else %}
+                        <span class="health-status moderate-risk">🟡 Moderate Disease Risk</span>
+                    {% endif %}
+                </div>
+                <div class="confidence-wrapper">
+                    <div class="confidence-label">
+                        <span>Confidence</span>
+                        <span>{{ confidence }}%</span>
+                    </div>
+                    <div class="confidence-bar-bg">
+                        <div class="confidence-bar-fill" style="width: {{ confidence }}%;"></div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="info-grid">
+                {% if description %}
+                <div class="info-card">
+                    <div class="info-card-title">📋 {{ t.disease_desc }}</div>
+                    <div class="info-card-content">{{ description }}</div>
+                </div>
+                {% endif %}
+
+                <div class="info-card">
+                    <div class="info-card-title">🌾 {{ t.ai_guidance }}</div>
+                    <div class="info-card-content" id="ai-disease-advice">Generating AI disease advice...</div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-card-title">💬 {{ t.ai_answer }}</div>
+                    <div class="info-card-content" id="ai-question-answer">Waiting for your question...</div>
+                </div>
+
+                {% if treatment %}
+                <div class="info-card">
+                    <div class="info-card-title">💊 {{ t.treatment }}</div>
+                    <div class="info-card-content">{{ treatment }}</div>
+                </div>
+                {% endif %}
+
+                {% if soil_advice %}
+                <div class="info-card">
+                    <div class="info-card-title">🌱 {{ t.soil_card }}</div>
+                    <div class="info-card-content">{{ soil_advice }}</div>
+                </div>
+                {% endif %}
+
+                {% if irrigation_advice %}
+                <div class="info-card">
+                    <div class="info-card-title">💧 {{ t.irrigation }}</div>
+                    <div class="info-card-content">{{ irrigation_advice }}</div>
+                </div>
+                {% endif %}
+
+                {% if weather_analysis %}
+                <div class="info-card">
+                    <div class="info-card-title">🌤️ {{ t.weather_card }}</div>
+                    <div class="info-card-content">{{ weather_analysis }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if top2_predictions %}
+            <div class="alt-predictions">
+                <div class="alt-predictions-title">{{ t.alternatives }}</div>
+                <div class="alt-list">
+                    {% for disease, prob in top2_predictions %}
+                    <div class="alt-item">
+                        <span class="alt-name">{{ disease }}</span>
+                        <span class="alt-prob">{{ (prob*100)|round(2) }}%</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if chat_response %}
+            <div class="info-card" style="margin-top:20px;">
+                <div class="info-card-title">💬 AI Assistant Response</div>
+                <div class="info-card-content">{{ chat_response }}</div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+
+<script>
+    // File upload preview
+    document.getElementById("fileInput").onchange = function(evt) {
+        const [file] = evt.target.files;
+        if (file) {
+            document.getElementById("preview").src = URL.createObjectURL(file);
+            document.getElementById("previewContainer").classList.add("show");
+            document.getElementById("uploadBox").style.display = "none";
+        }
+    };
+    
+    // Moisture slider
+    document.getElementById("moistureSlider").oninput = function() {
+        document.getElementById("moistureValue").textContent = this.value + "%";
+    };
+    
+    // Drag and drop
+    const dropZone = document.getElementById("uploadBox");
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#22c55e';
+        dropZone.style.background = 'rgba(34, 197, 94, 0.15)';
+    });
+    
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.borderColor = 'rgba(34, 197, 94, 0.3)';
+        dropZone.style.background = 'rgba(34, 197, 94, 0.05)';
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            document.getElementById("fileInput").files = dt.files;
+            document.getElementById("preview").src = URL.createObjectURL(file);
+            document.getElementById("previewContainer").classList.add("show");
+            document.getElementById("uploadBox").style.display = "none";
+        }
+    });
+    
+    // Load AI advice asynchronously
+    async function loadAIAdvice(){
+    
+        const result = {{ result|tojson }};
+        if(!result) return;
+    
+        const crop = document.querySelector("select[name='crop']").value;
+        const soil = document.querySelector("select[name='soil']").value;
+        const moisture = document.getElementById("moistureSlider").value;
+        const weather = document.querySelector("select[name='weather']").value;
+        const language = document.querySelector("select[name='language']").value;
+        const questionInput = document.querySelector("input[name='question']");
+        const question = questionInput ? questionInput.value : "";
+    
+        try{
+            const response = await fetch("/ai_advice",{
+                method:"POST",
+                headers:{"Content-Type":"application/json"},
+                body:JSON.stringify({
+                    crop:crop,
+                    disease:result,
+                    soil:soil,
+                    moisture:moisture,
+                    weather:weather,
+                    question:question,
+                    language:language
+                })
+            });
+            if(!response.ok){
+                throw new Error("API failed");
+            }
+            const data = await response.json();
+            // 🔊 Play AI voice response if available
+            if(data.audio){
+                try{
+                    const audio = new Audio(data.audio);
+                    audio.play();
+                } catch(e){
+                    console.log("Audio playback failed:", e);
+                }
+            }
+            const diseaseBox = document.getElementById("ai-disease-advice");
+            const questionBox = document.getElementById("ai-question-answer");
+
+            // Disease advice
+            if(diseaseBox){
+                diseaseBox.innerHTML =
+                    "<strong>Disease Advice:</strong><br>" +
+                    (data.advice || "No advice available").replace(/\\n/g,"<br>") +
+                    (data.audio ? "<br><br><audio controls src='" + data.audio + "'></audio>" : "");
+            }
+
+            // Question handling
+            if(question && question.trim() !== ""){
+                if(questionBox){
+                    questionBox.innerHTML =
+                        "<strong>Question:</strong> " + question +
+                        "<br><br><strong>AI Answer:</strong><br>" +
+                        (data.advice || "No advice available").replace(/\\n/g,"<br>") +
+                        (data.audio ? "<br><br><audio controls src='" + data.audio + "'></audio>" : "");
+                }
+            } else {
+                if(questionBox){
+                    questionBox.innerText = "No question asked.";
+                }
+            }
+        }
+        catch(e){
+            const diseaseBox = document.getElementById("ai-disease-advice");
+            const questionBox = document.getElementById("ai-question-answer");
+    
+            if(diseaseBox){
+                diseaseBox.innerText = "AI advice service unavailable.";
+            }
+            if(questionBox){
+                questionBox.innerText = "AI advice service unavailable.";
+            }
+        }
+    }
+    
+    // 🎤 Voice Input (Speech-to-Text)
+    const voiceBtn = document.getElementById("voiceBtn");
+
+    if ('webkitSpeechRecognition' in window) {
+        const recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        // recognition.lang = 'en-US';
+
+        const langMap = {
+            English: 'en-US',
+            Hindi: 'hi-IN',
+            Telugu: 'te-IN',
+            Tamil: 'ta-IN',
+            Kannada: 'kn-IN'
+        };
+
+        const langDropdown = document.querySelector("select[name='language']");
+        langDropdown.addEventListener("change", function(){
+            recognition.lang = langMap[this.value] || 'en-US';
+        });
+
+        recognition.interimResults = false;
+        recognition.continuous = false;
+
+        voiceBtn.addEventListener("click", () => {
+            const selectedLang = document.querySelector("select[name='language']").value;
+            recognition.lang = langMap[selectedLang] || 'en-US';
+            recognition.start();
+            voiceBtn.innerText = "🎤 Listening...";
+        });
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            const input = document.querySelector("input[name='question']");
+            input.value = transcript;
+            voiceBtn.innerText = "🎤 Speak";
+        };
+
+        recognition.onerror = function(event) {
+            console.error("Speech error:", event.error);
+            voiceBtn.innerText = "🎤 Speak";
+        };
+    } else {
+        voiceBtn.style.display = "none";
+    }
+
+    // Only load AI advice (no UI override anymore)
+    window.onload = function(){
+        loadAIAdvice();
+    };
+    </script>
+
+</body>
+</html>

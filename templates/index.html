@@ -487,7 +487,7 @@ select::-webkit-listbox{
         </form>
     </div>
 
-    {% if result %}
+    {% if result is not none %}
     <div class="results-section">
         <div class="results-card" style="margin-top:10px;">
 
@@ -634,10 +634,10 @@ select::-webkit-listbox{
     
     // Load AI advice asynchronously
     async function loadAIAdvice(){
-    
-        const result = {{ result|tojson }};
+
+        const result = {{ result|tojson if result is not none else 'null' }};
         if(!result) return;
-    
+
         const crop = document.querySelector("select[name='crop']").value;
         const soil = document.querySelector("select[name='soil']").value;
         const moisture = document.getElementById("moistureSlider").value;
@@ -645,7 +645,7 @@ select::-webkit-listbox{
         const language = document.querySelector("select[name='language']").value;
         const questionInput = document.querySelector("input[name='question']");
         const question = questionInput ? questionInput.value : "";
-    
+
         try{
             const response = await fetch("/ai_advice",{
                 method:"POST",
@@ -702,7 +702,7 @@ select::-webkit-listbox{
         catch(e){
             const diseaseBox = document.getElementById("ai-disease-advice");
             const questionBox = document.getElementById("ai-question-answer");
-    
+
             if(diseaseBox){
                 diseaseBox.innerText = "{{ t.ai_error }}";
             }
@@ -760,7 +760,9 @@ select::-webkit-listbox{
 
     // Only load AI advice (no UI override anymore)
     window.onload = function(){
-        loadAIAdvice();
+        if (typeof result !== "undefined" && result !== null) {
+            loadAIAdvice();
+        }
     };
     </script>
 

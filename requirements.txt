@@ -1,9 +1,10 @@
-Flask==3.0.0
+Flask
+tensorflow
 numpy
 Pillow
-gunicorn==21.2.0
-requests==2.31.0
-gtts==2.4.0
-deep-translator==1.11.4
+gunicorn
+gTTS
+deep-translator
 groq
-# Updated for Render deployment compatibility
+psutil
+requests

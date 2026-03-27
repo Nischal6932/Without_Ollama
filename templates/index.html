@@ -386,7 +386,7 @@ select::-webkit-listbox{
 
     <div class="hero">
         <h1>{{ t.title }}</h1>
-        <p>AI-powered plant disease detection & crop intelligence</p>
+        <p>{{ t.subtitle }}</p>
     </div>
 
     <div class="main-card">
@@ -401,8 +401,8 @@ select::-webkit-listbox{
                         <input type="file" name="image" id="fileInput" accept="image/*" required class="file-upload-input">
                         <div class="file-upload-box" id="uploadBox">
                             <div class="file-upload-icon">📷</div>
-                            <div class="file-upload-text">Click to upload or drag & drop</div>
-                            <div class="file-upload-hint">Supports JPG, PNG, WEBP</div>
+                            <div class="file-upload-text">{{ t.upload_hint }}</div>
+                            <div class="file-upload-hint">{{ t.upload_types }}</div>
                             <div class="preview-container" id="previewContainer">
                                 <img id="preview" class="preview-image">
                             </div>
@@ -459,14 +459,14 @@ select::-webkit-listbox{
 
                 <!-- Language Selection -->
                 <div class="form-group full-width">
-                    <label>Language</label>
+                    <label>{{ t.language }}</label>
                     <div class="select-wrapper">
                         <select name="language" id="languageSelect">
-                            <option value="English">English</option>
-                            <option value="Hindi">Hindi</option>
-                            <option value="Telugu">Telugu</option>
-                            <option value="Tamil">Tamil</option>
-                            <option value="Kannada">Kannada</option>
+                            <option value="English" {% if language=='English' %}selected{% endif %}>English</option>
+                            <option value="Hindi" {% if language=='Hindi' %}selected{% endif %}>Hindi</option>
+                            <option value="Telugu" {% if language=='Telugu' %}selected{% endif %}>Telugu</option>
+                            <option value="Tamil" {% if language=='Tamil' %}selected{% endif %}>Tamil</option>
+                            <option value="Kannada" {% if language=='Kannada' %}selected{% endif %}>Kannada</option>
                         </select>
                     </div>
                 </div>
@@ -474,7 +474,7 @@ select::-webkit-listbox{
 
             <div class="form-group full-width">
                 <label>{{ t.question }}</label>
-                <input type="text" name="question" value="{{ request.form.get('question','') }}" placeholder="Example: Why did this disease occur?" style="width:100%;padding:10px;border-radius:6px;border:1px solid #ccc;">
+                <input type="text" name="question" value="{{ request.form.get('question','') }}" placeholder="{{ t.placeholder }}" style="width:100%;padding:10px;border-radius:6px;border:1px solid #ccc;">
                 <button type="button" id="voiceBtn" style="margin-top:10px;padding:8px 12px;border:none;border-radius:6px;background:#1f5f3f;color:white;cursor:pointer;">
                     🎤 Speak
                 </button>
@@ -525,12 +525,12 @@ select::-webkit-listbox{
 
                 <div class="info-card">
                     <div class="info-card-title">🌾 {{ t.ai_guidance }}</div>
-                    <div class="info-card-content" id="ai-disease-advice">Generating AI disease advice...</div>
+                    <div class="info-card-content" id="ai-disease-advice">{{ t.loading_ai }}</div>
                 </div>
 
                 <div class="info-card">
                     <div class="info-card-title">💬 {{ t.ai_answer }}</div>
-                    <div class="info-card-content" id="ai-question-answer">Waiting for your question...</div>
+                    <div class="info-card-content" id="ai-question-answer">{{ t.waiting_question }}</div>
                 </div>
 
                 {% if treatment %}
@@ -578,7 +578,7 @@ select::-webkit-listbox{
 
             {% if chat_response %}
             <div class="info-card" style="margin-top:20px;">
-                <div class="info-card-title">💬 AI Assistant Response</div>
+                <div class="info-card-title">💬 {{ t.ai_response }}</div>
                 <div class="info-card-content">{{ chat_response }}</div>
             </div>
             {% endif %}
@@ -679,7 +679,7 @@ select::-webkit-listbox{
             // Disease advice
             if(diseaseBox){
                 diseaseBox.innerHTML =
-                    "<strong>Disease Advice:</strong><br>" +
+                    "<strong>{{ t.disease_advice }}:</strong><br>" +
                     (data.advice || "No advice available").replace(/\\n/g,"<br>") +
                     (data.audio ? "<br><br><audio controls src='" + data.audio + "'></audio>" : "");
             }
@@ -688,14 +688,14 @@ select::-webkit-listbox{
             if(question && question.trim() !== ""){
                 if(questionBox){
                     questionBox.innerHTML =
-                        "<strong>Question:</strong> " + question +
-                        "<br><br><strong>AI Answer:</strong><br>" +
-                        (data.advice || "No advice available").replace(/\\n/g,"<br>") +
+                        "<strong>{{ t.question_label }}:</strong> " + question +
+                        "<br><br><strong>{{ t.ai_answer_label }}:</strong><br>" +
+                        (data.question_answer || "No answer available").replace(/\\n/g,"<br>") +
                         (data.audio ? "<br><br><audio controls src='" + data.audio + "'></audio>" : "");
                 }
             } else {
                 if(questionBox){
-                    questionBox.innerText = "No question asked.";
+                    questionBox.innerText = "{{ t.no_question }}";
                 }
             }
         }
@@ -704,10 +704,10 @@ select::-webkit-listbox{
             const questionBox = document.getElementById("ai-question-answer");
     
             if(diseaseBox){
-                diseaseBox.innerText = "AI advice service unavailable.";
+                diseaseBox.innerText = "{{ t.ai_error }}";
             }
             if(questionBox){
-                questionBox.innerText = "AI advice service unavailable.";
+                questionBox.innerText = "{{ t.ai_error }}";
             }
         }
     }
@@ -740,19 +740,19 @@ select::-webkit-listbox{
             const selectedLang = document.querySelector("select[name='language']").value;
             recognition.lang = langMap[selectedLang] || 'en-US';
             recognition.start();
-            voiceBtn.innerText = "🎤 Listening...";
+            voiceBtn.innerText = "{{ t.listening }}";
         });
 
         recognition.onresult = function(event) {
             const transcript = event.results[0][0].transcript;
             const input = document.querySelector("input[name='question']");
             input.value = transcript;
-            voiceBtn.innerText = "🎤 Speak";
+            voiceBtn.innerText = "{{ t.speak }}";
         };
 
         recognition.onerror = function(event) {
             console.error("Speech error:", event.error);
-            voiceBtn.innerText = "🎤 Speak";
+            voiceBtn.innerText = "{{ t.speak }}";
         };
     } else {
         voiceBtn.style.display = "none";

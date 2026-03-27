@@ -9,19 +9,30 @@ from deep_translator import GoogleTranslator
 from groq import Groq
 
 api_key = os.environ.get("GROQ_API_KEY")
-if not api_key:
-    print("❌ GROQ API KEY MISSING")
 
-client = Groq(api_key=api_key)
+if api_key:
+    client = Groq(api_key=api_key)
+    print("✅ GROQ connected")
+else:
+    client = None
+    print("⚠️ GROQ disabled (no API key)")
 
 def ask_llm(prompt):
-    chat_completion = client.chat.completions.create(
-        messages=[
-            {"role": "user", "content": prompt}
-        ],
-        model="llama3-8b-8192"
-    )
-    return chat_completion.choices[0].message.content
+    if client is None:
+        return "AI service is not available right now. Please try again later."
+
+    try:
+        # Using updated Groq supported model
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            model="llama-3.1-8b-instant"
+        )
+        return chat_completion.choices[0].message.content
+    except Exception as e:
+        print("LLM error:", e)
+        return "AI service temporarily unavailable. Please try again or check model configuration."
 
 
 app = Flask(__name__)
@@ -55,7 +66,14 @@ translations = {
         "weather_dry": "Dry",
         "weather_humid": "Humid",
         "weather_rainy": "Rainy",
-        "weather_hot": "Hot"
+        "weather_hot": "Hot",
+        "language": "Language",
+        "loading_ai": "Generating AI advice...",
+        "waiting_question": "Waiting for your question...",
+        "ai_response": "AI Assistant Response",
+        "listening": "🎤 Listening...",
+        "speak": "🎤 Speak"
+
     },
     "Hindi": {
         "title": "स्मार्ट खेती सहायक",
@@ -84,7 +102,14 @@ translations = {
         "weather_dry": "सूखा",
         "weather_humid": "नमी",
         "weather_rainy": "बरसात",
-        "weather_hot": "गर्म"
+        "weather_hot": "गर्म",
+        "language": "भाषा",
+        "loading_ai": "AI सलाह तैयार हो रही है...",
+        "waiting_question": "आपके प्रश्न का इंतजार है...",
+        "ai_response": "AI सहायक उत्तर",
+        "listening": "🎤 सुन रहा है...",
+        "speak": "🎤 बोलें"
+
     },
     "Telugu": {
         "title": "స్మార్ట్ వ్యవసాయ సహాయకుడు",
@@ -113,7 +138,14 @@ translations = {
         "weather_dry": "ఎండ",
         "weather_humid": "తేమ",
         "weather_rainy": "వర్షం",
-        "weather_hot": "వేడి"
+        "weather_hot": "వేడి",
+        "language": "భాష",
+        "loading_ai": "AI సలహా తయారవుతోంది...",
+        "waiting_question": "మీ ప్రశ్న కోసం వేచి ఉంది...",
+        "ai_response": "AI సమాధానం",
+        "listening": "🎤 వింటోంది...",
+        "speak": "🎤 మాట్లాడండి"
+
     }
 }
 
@@ -128,12 +160,14 @@ model = None
 def get_model():
     """
     Memory-efficient model loading with fallback for low-memory environments
+    Supports multiple model sources for production deployment
     """
     global model
     if model is None:
         try:
             import os
             import gc
+            import requests
             
             # Check available memory first
             try:
@@ -164,6 +198,11 @@ def get_model():
                 if os.path.exists(path):
                     model_path = path
                     break
+            
+            # If model doesn't exist locally, try downloading from GitHub
+            if model_path is None:
+                print("📥 Model not found locally, attempting download...")
+                model_path = download_model_from_github()
             
             if model_path is None:
                 print("❌ Model file not found, using fallback mode")
@@ -197,6 +236,42 @@ def get_model():
             model = None
     
     return model
+
+def download_model_from_github():
+    """
+    Download ML model from GitHub Releases
+    """
+    import requests
+    model_url = "https://github.com/Nischal6932/No_Ollama/releases/download/v1.0/plant_disease_efficientnet.keras"
+    model_path = "plant_disease_efficientnet.keras"
+    
+    try:
+        print(f"📥 Downloading model from GitHub Releases...")
+        response = requests.get(model_url, stream=True, timeout=30)
+        response.raise_for_status()
+        
+        # Save model with progress indication
+        total_size = int(response.headers.get('content-length', 0))
+        downloaded = 0
+        
+        with open(model_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    if total_size > 0:
+                        percent = (downloaded / total_size) * 100
+                        print(f"📊 Download progress: {percent:.1f}%", end='\r')
+        
+        print(f"\n✅ Model downloaded successfully: {model_path}")
+        return model_path
+        
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Failed to download model: {e}")
+        return None
+    except Exception as e:
+        print(f"❌ Unexpected download error: {e}")
+        return None
 
 def get_fallback_prediction(img_array):
     """
@@ -374,35 +449,12 @@ def ai_advice_endpoint():
     question = data.get("question")
     language = data.get("language", "English")
 
-    # Build prompt depending on whether farmer asked a question
-    if question and question.strip() != "":
-        prompt = f"""
+    # Always generate disease guidance (separate from question)
+    prompt = f"""
 You are an expert agricultural advisor helping farmers in India.
 
-Respond STRICTLY in {language} language.
-DO NOT use English at all.
-If needed, translate your full answer into {language}.
-Use simple, clear, farmer-friendly words in {language}.
-
-The farmer asked a specific question about their crop.
-
-Farmer Question:
-{question}
-
-Crop: {crop}
-
-Answer ONLY the farmer's question clearly and directly.
-Do NOT explain the detected disease unless the question asks about it.
-Use short bullet points and simple farmer‑friendly language.
-"""
-    else:
-        prompt = f"""
-You are an expert agricultural advisor helping farmers in India.
-
-Respond STRICTLY in {language} language.
-DO NOT use English at all.
-If needed, translate your full answer into {language}.
-Use simple, clear, farmer-friendly words in {language}.
+Respond ONLY in {language}.
+Use simple, clear, farmer-friendly words.
 
 Crop: {crop}
 Detected Disease: {disease}
@@ -421,13 +473,28 @@ Provide:
 Use simple bullet points suitable for farmers.
 """
 
+    # Generate separate answer for farmer question
+    question_answer = None
+
+    if question and question.strip() != "":
+        question_prompt = f"""
+You are an expert agricultural advisor.
+
+Respond ONLY in {language}.
+Keep answer short and practical.
+
+Question:
+{question}
+"""
+        question_answer = ask_llm(question_prompt)
+
     try:
         print(f"🌍 Selected language: {language}")
         response = ask_llm(prompt).strip()
 
         # Force translation using Google Translator (reliable)
         try:
-            if language != "English":
+            if language != "English" and response:
                 lang_map = {
                     "English": "en",
                     "Hindi": "hi",
@@ -435,18 +502,24 @@ Use simple bullet points suitable for farmers.
                     "Tamil": "ta",
                     "Kannada": "kn"
                 }
-
                 target_lang = lang_map.get(language, "en")
 
-                translated_response = GoogleTranslator(source='auto', target=target_lang).translate(response)
-                if translated_response:
-                    response = translated_response
+                # Force full translation
+                response = GoogleTranslator(source='auto', target=target_lang).translate(response)
 
         except Exception as e:
             print(f"Translation failed: {e}")
 
         # Generate voice output using gTTS
         try:
+            # Clean up previous audio files before creating a new one
+            import glob
+            for f in glob.glob("static/output_*.mp3"):
+                try:
+                    os.remove(f)
+                except:
+                    pass
+
             lang_map = {
                 "English": "en",
                 "Hindi": "hi",
@@ -456,12 +529,14 @@ Use simple bullet points suitable for farmers.
             }
 
             tts_lang = lang_map.get(language, "en")
-            audio_path = os.path.join("static", "output.mp3")
+            import uuid
+            audio_filename = f"output_{uuid.uuid4().hex}.mp3"
+            audio_path = os.path.join("static", audio_filename)
 
-            tts = gTTS(text=response, lang=tts_lang)
+            tts = gTTS(text=response, lang=tts_lang, slow=False)
             tts.save(audio_path)
 
-            audio_url = "/static/output.mp3"
+            audio_url = f"/static/{audio_filename}"
 
         except Exception as e:
             print(f"Audio generation failed: {e}")
@@ -469,11 +544,13 @@ Use simple bullet points suitable for farmers.
 
         return jsonify({
             "advice": response,
+            "question_answer": question_answer,
             "audio": audio_url
         })
-    except Exception:
+    except Exception as e:
+        print("🔥 AI ERROR:", e)
         return jsonify({
-            "advice": "AI advice service unavailable",
+            "advice": str(e),
             "audio": None
         })
 
@@ -493,7 +570,7 @@ def predict():
     top2_predictions = None
     ai_advice = None
     chat_response = None
-    language = request.form.get("language", "English") if request.method == "POST" else "English"
+    language = request.form.get("language") or request.args.get("language") or "English"
     t = translations.get(language, translations["English"])
 
     if request.method == "POST":
@@ -734,13 +811,14 @@ def predict():
         print(f"📈 Confidence values: best={confidence}, second={second_confidence}")
 
         # Confidence threshold to avoid false disease alarms
-        if confidence < 0.7:
-            result = "Leaf appears healthy or disease is unclear"
-            description = "The model confidence is low. The leaf likely appears healthy or symptoms are not clear."
-            treatment = "Monitor the plant and upload a clearer image if symptoms develop."
-            print("🟢 Low confidence - marking as healthy/unclear")
+        if confidence < 0.2:
+            print("🟡 Low confidence - using AI fallback")
+
+            result = "Uncertain result (AI verification)"
+            description = "Low confidence. AI verification will be shown."
+            treatment = None
         else:
-            result = class_names[best_idx]
+            result = f"{crop} - " + class_names[best_idx].replace("___", " - ").replace("_", " ")
             print(f"🔴 High confidence - disease detected: {result}")
 
             # Skip LLM if plant is healthy
@@ -775,18 +853,28 @@ def predict():
                     "Tamil": "ta",
                     "Kannada": "kn"
                 }
-                return GoogleTranslator(source='auto', target=lang_map.get(language, "en")).translate(text)
+                translated = GoogleTranslator(source='auto', target=lang_map.get(language, "en")).translate(text)
+                return translated if translated else text
         except Exception as e:
             print(f"Translation error: {e}")
         return text
 
-    # Apply translation to outputs
-    description = translate_text(description)
-    treatment = translate_text(treatment)
-    soil_advice = translate_text(soil_advice)
-    irrigation_advice = translate_text(irrigation_advice)
-    weather_analysis = translate_text(weather_analysis)
-    result = translate_text(result)
+    # Apply translation to ALL outputs (FIX: include result also)
+    if request.method == "POST":
+        result = translate_text(result)
+        description = translate_text(description)
+        treatment = translate_text(treatment)
+        soil_advice = translate_text(soil_advice)
+        irrigation_advice = translate_text(irrigation_advice)
+        weather_analysis = translate_text(weather_analysis)
+
+    # Translate top2_predictions names if present
+    if request.method == "POST":
+        if top2_predictions:
+            top2_predictions = [
+                (translate_text(name), prob)
+                for name, prob in top2_predictions
+            ]
 
     return render_template(
         "index.html",

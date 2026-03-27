@@ -27,12 +27,12 @@ def ask_llm(prompt):
             messages=[
                 {"role": "user", "content": prompt}
             ],
-            model="llama-3.1-8b-instant"
+            model="llama3-8b-8192"
         )
         return chat_completion.choices[0].message.content
     except Exception as e:
         print("LLM error:", e)
-        return "AI service temporarily unavailable. Please try again or check model configuration."
+        return "AI service temporarily unavailable. Please try again later."
 
 
 app = Flask(__name__)
@@ -895,7 +895,7 @@ def predict():
 
 if __name__ == "__main__":
     import os
-    port = int(os.environ.get('PORT', 5001))
+    port = int(os.environ.get('PORT', 10000))
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     
     print("=" * 50)
